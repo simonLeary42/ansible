@@ -1,0 +1,2 @@
+bugfixes:
+- copy now returns the diff for all content when copying recursively with remote_src=false.
