@@ -599,7 +599,7 @@ class ActionModule(ActionBase):
             if "diff" in module_return:
                 result['diff'].append(module_return['diff'])
 
-        if module_executed and len(source_files['files']) == 1:
+        if module_executed and len(source_files['files']) == 1 and len(source_files['directories']) == 0 and len(source_files['symlinks']) == 0:
             result.update(module_return)
 
             # the file module returns the file path as 'path', but
