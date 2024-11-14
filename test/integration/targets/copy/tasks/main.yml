@@ -120,7 +120,7 @@
 
     - name: create file for multi diff test
       copy:
-        path: "{{ role_path }}/files/multi-diff-test/file"
+        dest: "{{ role_path }}/files/multi-diff-test/file"
         content: "hello, world!\n"
       delegate_to: localhost
 
