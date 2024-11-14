@@ -543,7 +543,7 @@ class ActionModule(ActionBase):
 
             module_executed = True
             changed = changed or module_return.get('changed', False)
-            combine_result_diffs(result, module_return)
+            result['diff'] += module_return['diff']
 
         for src, dest_path in source_files['directories']:
             # Find directories that are leaves as they might not have been
@@ -567,7 +567,7 @@ class ActionModule(ActionBase):
 
             module_executed = True
             changed = changed or module_return.get('changed', False)
-            combine_result_diffs(result, module_return)
+            result['diff'].append(module_return['diff'])
 
         for target_path, dest_path in source_files['symlinks']:
             # Copy symlinks over
@@ -594,7 +594,7 @@ class ActionModule(ActionBase):
                 return self._ensure_invocation(result)
 
             changed = changed or module_return.get('changed', False)
-            combine_result_diffs(result, module_return)
+            result['diff'].append(module_return['diff'])
 
         if module_executed and len(source_files['files']) == 1:
             result.update(module_return)
