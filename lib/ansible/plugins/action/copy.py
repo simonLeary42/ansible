@@ -532,6 +532,8 @@ class ActionModule(ActionBase):
                 continue
 
             if module_return.get('failed'):
+                # FIXME all the files successfully created before this point
+                # have their diffs deleted here
                 result.update(module_return)
                 return self._ensure_invocation(result)
 
@@ -563,6 +565,8 @@ class ActionModule(ActionBase):
             module_return = self._execute_module(module_name='ansible.legacy.file', module_args=new_module_args, task_vars=task_vars)
 
             if module_return.get('failed'):
+                # FIXME all the files,directories successfully created before this point
+                # have their diffs deleted here
                 result.update(module_return)
                 return self._ensure_invocation(result)
 
@@ -592,6 +596,8 @@ class ActionModule(ActionBase):
             module_executed = True
 
             if module_return.get('failed'):
+                # FIXME all the files,directories,symlinks successfully created before this point
+                # have their diffs deleted here
                 result.update(module_return)
                 return self._ensure_invocation(result)
 
