@@ -3,8 +3,7 @@
 # Copyright: (c) 2020, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -12,7 +11,7 @@ ANSIBLE_METADATA = {
     'supported_by': 'community'
 }
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: setup_collections
 short_description: Set up test collections based on the input
@@ -58,9 +57,9 @@ options:
         default: '{}'
 author:
 - Jordan Borean (@jborean93)
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Build test collections
   setup_collections:
     path: ~/ansible/collections/ansible_collections
@@ -71,11 +70,11 @@ EXAMPLES = '''
     - namespace: namespace1
       name: name1
       version: 0.0.2
-'''
+"""
 
-RETURN = '''
+RETURN = """
 #
-'''
+"""
 
 import datetime
 import os
@@ -91,7 +90,7 @@ from multiprocessing import dummy as threading
 from multiprocessing import TimeoutError
 
 
-COLLECTIONS_BUILD_AND_PUBLISH_TIMEOUT = 120
+COLLECTIONS_BUILD_AND_PUBLISH_TIMEOUT = 180
 
 
 def publish_collection(module, collection):
@@ -156,7 +155,12 @@ def publish_collection(module, collection):
 
             # Extract the tarfile to sign the MANIFEST.json
             with tarfile.open(collection_path, mode='r') as collection_tar:
-                collection_tar.extractall(path=os.path.join(collection_dir, '%s-%s-%s' % (namespace, name, version)))
+                # deprecated: description='extractall fallback without filter' python_version='3.11'
+                # Replace 'tar_filter' with 'data_filter' and 'filter=tar' with 'filter=data' once Python 3.12 is minimum requirement.
+                if hasattr(tarfile, 'tar_filter'):
+                    collection_tar.extractall(path=os.path.join(collection_dir, '%s-%s-%s' % (namespace, name, version)), filter='tar')
+                else:
+                    collection_tar.extractall(path=os.path.join(collection_dir, '%s-%s-%s' % (namespace, name, version)))
 
             manifest_path = os.path.join(collection_dir, '%s-%s-%s' % (namespace, name, version), 'MANIFEST.json')
             signature_path = os.path.join(module.params['signature_dir'], '%s-%s-%s-MANIFEST.json.asc' % (namespace, name, version))

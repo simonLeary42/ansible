@@ -15,9 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
-# Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import typing as t
 
@@ -31,10 +29,10 @@ display = Display()
 
 
 class Conditional:
-    '''
+    """
     This is a mix-in class, to be used with Base to allow the object
     to be run conditionally when a condition is met or skipped.
-    '''
+    """
 
     when = FieldAttribute(isa='list', default=list, extend=True, prepend=True)
 
@@ -54,10 +52,10 @@ class Conditional:
             setattr(self, name, [value])
 
     def evaluate_conditional(self, templar: Templar, all_vars: dict[str, t.Any]) -> bool:
-        '''
+        """
         Loops through the conditionals set on this object, returning
         False if any of them evaluate as such.
-        '''
+        """
         return self.evaluate_conditional_with_result(templar, all_vars)[0]
 
     def evaluate_conditional_with_result(self, templar: Templar, all_vars: dict[str, t.Any]) -> tuple[bool, t.Optional[str]]:
@@ -101,10 +99,15 @@ class Conditional:
                 elif conditional == "":
                     return False
 
+            # If the result of the first-pass template render (to resolve inline templates) is marked unsafe,
+            # explicitly disable lookups on the final pass to prevent evaluation of untrusted content in the
+            # constructed template.
+            disable_lookups = hasattr(conditional, '__UNSAFE__')
+
             # NOTE The spaces around True and False are intentional to short-circuit literal_eval for
             #      jinja2_native=False and avoid its expensive calls.
             return templar.template(
-                "{%% if %s %%} True {%% else %%} False {%% endif %%}" % conditional
-            ).strip() == "True"
+                "{%% if %s %%} True {%% else %%} False {%% endif %%}" % conditional,
+                disable_lookups=disable_lookups).strip() == "True"
         except AnsibleUndefinedVariable as e:
             raise AnsibleUndefinedVariable("error while evaluating conditional (%s): %s" % (original, e))

@@ -2,9 +2,7 @@
 # Copyright (c) 2019 Ansible Project
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 
-# Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import json
 
@@ -44,9 +42,9 @@ def json_dump(structure):
 
 
 class AnsibleJSONEncoder(json.JSONEncoder):
-    '''
+    """
     Simple encoder class to deal with JSON encoding of Ansible internal types
-    '''
+    """
 
     def __init__(self, preprocess_unsafe=False, vault_to_text=False, **kwargs):
         self._preprocess_unsafe = preprocess_unsafe

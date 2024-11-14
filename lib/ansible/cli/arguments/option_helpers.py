@@ -1,8 +1,7 @@
 # Copyright: (c) 2018, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import copy
 import operator
@@ -298,14 +297,14 @@ def add_inventory_options(parser):
                         help='outputs a list of matching hosts; does not execute anything else')
     parser.add_argument('-l', '--limit', default=C.DEFAULT_SUBSET, dest='subset',
                         help='further limit selected hosts to an additional pattern')
+    parser.add_argument('--flush-cache', dest='flush_cache', action='store_true',
+                        help="clear the fact cache for every host in inventory")
 
 
 def add_meta_options(parser):
     """Add options for commands which can launch meta tasks from the command line"""
     parser.add_argument('--force-handlers', default=C.DEFAULT_FORCE_HANDLERS, dest='force_handlers', action='store_true',
                         help="run handlers even if a task fails")
-    parser.add_argument('--flush-cache', dest='flush_cache', action='store_true',
-                        help="clear the fact cache for every host in inventory")
 
 
 def add_module_options(parser):
@@ -393,7 +392,7 @@ def add_vault_options(parser):
     parser.add_argument('--vault-id', default=[], dest='vault_ids', action='append', type=str,
                         help='the vault identity to use')
     base_group = parser.add_mutually_exclusive_group()
-    base_group.add_argument('--ask-vault-password', '--ask-vault-pass', default=C.DEFAULT_ASK_VAULT_PASS, dest='ask_vault_pass', action='store_true',
+    base_group.add_argument('-J', '--ask-vault-password', '--ask-vault-pass', default=C.DEFAULT_ASK_VAULT_PASS, dest='ask_vault_pass', action='store_true',
                             help='ask for vault password')
     base_group.add_argument('--vault-password-file', '--vault-pass-file', default=[], dest='vault_password_files',
                             help="vault password file", type=unfrack_path(follow=False), action='append')

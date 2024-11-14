@@ -3,12 +3,11 @@
 # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
 """Test low-level utility functions from ``module_utils.common.collections``."""
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
+from __future__ import annotations
 
 import pytest
 
-from ansible.module_utils.six.moves.collections_abc import Sequence
+from collections.abc import Sequence
 from ansible.module_utils.common.collections import ImmutableDict, is_iterable, is_sequence
 
 
@@ -40,16 +39,14 @@ class FakeAnsibleVaultEncryptedUnicode(Sequence):
 TEST_STRINGS = u'he', u'Україна', u'Česká republika'
 TEST_STRINGS = TEST_STRINGS + tuple(s.encode('utf-8') for s in TEST_STRINGS) + (FakeAnsibleVaultEncryptedUnicode(u'foo'),)
 
-TEST_ITEMS_NON_SEQUENCES = (
+TEST_ITEMS_NON_SEQUENCES: tuple = (
     {}, object(), frozenset(),
     4, 0.,
 ) + TEST_STRINGS
 
-TEST_ITEMS_SEQUENCES = (
+TEST_ITEMS_SEQUENCES: tuple = (
     [], (),
     SeqStub(),
-)
-TEST_ITEMS_SEQUENCES = TEST_ITEMS_SEQUENCES + (
     # Iterable effectively containing nested random data:
     TEST_ITEMS_NON_SEQUENCES,
 )

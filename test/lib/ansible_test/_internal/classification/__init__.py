@@ -674,11 +674,6 @@ class PathMapper:
 
         # Early classification that needs to occur before common classification belongs here.
 
-        if path.startswith('test/units/compat/'):
-            return {
-                'units': 'test/units/',
-            }
-
         if dirname == '.azure-pipelines/commands':
             test_map = {
                 'cloud.sh': 'integration:cloud/',
@@ -742,8 +737,12 @@ class PathMapper:
             return minimal
 
         if path.startswith('packaging/'):
-            if path.startswith('packaging/pep517_backend/'):
-                return packaging
+            packaging_target = f'packaging_{os.path.splitext(path.split(os.path.sep)[1])[0]}'
+
+            if packaging_target in self.integration_targets_by_name:
+                return {
+                    'integration': packaging_target,
+                }
 
             return minimal
 
@@ -835,8 +834,6 @@ class PathMapper:
                 'MANIFEST.in',
                 'pyproject.toml',
                 'requirements.txt',
-                'setup.cfg',
-                'setup.py',
             ):
                 return packaging
 

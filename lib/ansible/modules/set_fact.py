@@ -3,11 +3,10 @@
 # Copyright: (c) 2013, Dag Wieers (@dagwieers) <dag@wieers.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
+from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: set_fact
 short_description: Set host variable(s) and fact(s).
@@ -78,9 +77,9 @@ seealso:
   description: More information related to variable precedence and which type of variable wins over others.
 author:
 - Dag Wieers (@dagwieers)
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Setting host facts using key=value pairs, this format can only create strings or booleans
   ansible.builtin.set_fact: one_fact="something" other_fact="{{ local_var }}"
 
@@ -117,4 +116,4 @@ EXAMPLES = r'''
   ansible.builtin.set_fact:
     two_dict: {'something': here2, 'other': somewhere}
     two_list: [1,2,3]
-'''
+"""

@@ -14,15 +14,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 from ansible.plugins.action import ActionBase
 from ansible.module_utils.six import string_types
 
 
 class ActionModule(ActionBase):
-    ''' Create inventory groups based on variables '''
+    """ Create inventory groups based on variables """
 
     # We need to be able to modify the inventory
     TRANSFERS_FILES = False

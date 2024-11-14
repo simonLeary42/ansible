@@ -2,9 +2,8 @@
 # (c) 2017 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
-__metaclass__ = type
 
 DOCUMENTATION = """
 author:
@@ -313,6 +312,7 @@ from ansible.plugins.loader import (
     connection_loader,
     terminal_loader,
 )
+from ansible.utils.display import Display
 from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils import (
     to_list,
 )
@@ -328,6 +328,7 @@ except ImportError:
     HAS_SCP = False
 
 HAS_PYLIBSSH = False
+display = Display()
 
 
 def ensure_connect(func):
@@ -600,7 +601,7 @@ class Connection(NetworkConnectionBase):
         """
         Connects to the remote device and starts the terminal
         """
-        if self._play_context.verbosity > 3:
+        if display.verbosity > 3:
             logging.getLogger(self.ssh_type).setLevel(logging.DEBUG)
 
         self.queue_message(

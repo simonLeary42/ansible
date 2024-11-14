@@ -3,11 +3,10 @@
 # (c) 2012, Michael DeHaan <michael.dehaan@gmail.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
+from __future__ import annotations
 
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: setup
 version_added: historical
@@ -26,10 +25,10 @@ options:
               V(processor_count), V(python), V(python_version), V(real_user_id), V(selinux), V(service_mgr),
               V(ssh_host_key_dsa_public), V(ssh_host_key_ecdsa_public), V(ssh_host_key_ed25519_public),
               V(ssh_host_key_rsa_public), V(ssh_host_pub_keys), V(ssh_pub_keys), V(system), V(system_capabilities),
-              V(system_capabilities_enforced), V(user), V(user_dir), V(user_gecos), V(user_gid), V(user_id),
+              V(system_capabilities_enforced), V(systemd), V(user), V(user_dir), V(user_gecos), V(user_gid), V(user_id),
               V(user_shell), V(user_uid), V(virtual), V(virtualization_role), V(virtualization_type).
-             Can specify a list of values to specify a larger subset.
-             Values can also be used with an initial C(!) to specify that
+              Can specify a list of values to specify a larger subset.
+              Values can also be used with an initial C(!) to specify that
               that specific subset should not be collected.  For instance:
               V(!hardware,!network,!virtual,!ohai,!facter). If V(!all) is specified
               then only the min subset is collected. To avoid collecting even the
@@ -111,7 +110,7 @@ notes:
 author:
     - "Ansible Core Team"
     - "Michael DeHaan"
-'''
+"""
 
 EXAMPLES = r"""
 # Display facts from all hosts and store them indexed by `hostname` at `/tmp/facts`.

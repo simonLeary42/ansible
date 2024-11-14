@@ -15,8 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import os
 
@@ -31,7 +30,7 @@ class ActionModule(ActionBase):
     TRANSFERS_FILES = True
 
     def run(self, tmp=None, task_vars=None):
-        ''' handler for unarchive operations '''
+        """ handler for unarchive operations """
         if task_vars is None:
             task_vars = dict()
 

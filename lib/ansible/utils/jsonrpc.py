@@ -1,8 +1,7 @@
 # (c) 2017, Peter Sprygada <psprygad@redhat.com>
 # (c) 2017 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import json
 import pickle
@@ -84,7 +83,7 @@ class JsonRpcServer(object):
             result = to_text(result)
         if not isinstance(result, text_type):
             response["result_type"] = "pickle"
-            result = to_text(pickle.dumps(result, protocol=0))
+            result = to_text(pickle.dumps(result), errors='surrogateescape')
         response['result'] = result
         return response
 

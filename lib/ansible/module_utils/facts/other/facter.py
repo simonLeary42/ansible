@@ -1,8 +1,7 @@
 # Copyright (c) 2023 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import json
 
@@ -23,8 +22,14 @@ class FacterFactCollector(BaseFactCollector):
                                                   namespace=namespace)
 
     def find_facter(self, module):
-        facter_path = module.get_bin_path('facter', opt_dirs=['/opt/puppetlabs/bin'])
-        cfacter_path = module.get_bin_path('cfacter', opt_dirs=['/opt/puppetlabs/bin'])
+        facter_path = module.get_bin_path(
+            'facter',
+            opt_dirs=['/opt/puppetlabs/bin']
+        )
+        cfacter_path = module.get_bin_path(
+            'cfacter',
+            opt_dirs=['/opt/puppetlabs/bin']
+        )
 
         # Prefer to use cfacter if available
         if cfacter_path is not None:
@@ -74,7 +79,6 @@ class FacterFactCollector(BaseFactCollector):
         try:
             facter_dict = json.loads(facter_output)
         except Exception:
-            # FIXME: maybe raise a FactCollectorError with some info attrs?
-            pass
+            module.warn("Failed to parse facter facts")
 
         return facter_dict

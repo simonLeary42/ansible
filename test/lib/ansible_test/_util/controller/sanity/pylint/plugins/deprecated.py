@@ -5,8 +5,6 @@
 from __future__ import annotations
 
 import datetime
-import functools
-import json
 import re
 import shlex
 import typing as t
@@ -14,12 +12,14 @@ from tokenize import COMMENT, TokenInfo
 
 import astroid
 
-from pylint.interfaces import IAstroidChecker, ITokenChecker
+try:
+    from pylint.checkers.utils import check_messages
+except ImportError:
+    from pylint.checkers.utils import only_required_for_messages as check_messages
+
 from pylint.checkers import BaseChecker, BaseTokenChecker
-from pylint.checkers.utils import check_messages
 
 from ansible.module_utils.compat.version import LooseVersion
-from ansible.module_utils.six import string_types
 from ansible.release import __version__ as ansible_version_raw
 from ansible.utils.version import SemanticVersion
 
@@ -124,7 +124,7 @@ def _get_func_name(node):
 def parse_isodate(value):
     """Parse an ISO 8601 date string."""
     msg = 'Expected ISO 8601 date string (YYYY-MM-DD)'
-    if not isinstance(value, string_types):
+    if not isinstance(value, str):
         raise ValueError(msg)
     # From Python 3.7 in, there is datetime.date.fromisoformat(). For older versions,
     # we have to do things manually.
@@ -141,7 +141,6 @@ class AnsibleDeprecatedChecker(BaseChecker):
     has not passed or met the time for removal
     """
 
-    __implements__ = (IAstroidChecker,)
     name = 'deprecated'
     msgs = MSGS
 
@@ -214,14 +213,14 @@ class AnsibleDeprecatedChecker(BaseChecker):
     @property
     def collection_name(self) -> t.Optional[str]:
         """Return the collection name, or None if ansible-core is being tested."""
-        return self.config.collection_name
+        return self.linter.config.collection_name
 
     @property
     def collection_version(self) -> t.Optional[SemanticVersion]:
         """Return the collection version, or None if ansible-core is being tested."""
-        if self.config.collection_version is None:
+        if self.linter.config.collection_version is None:
             return None
-        sem_ver = SemanticVersion(self.config.collection_version)
+        sem_ver = SemanticVersion(self.linter.config.collection_version)
         # Ignore pre-release for version comparison to catch issues before the final release is cut.
         sem_ver.prerelease = ()
         return sem_ver
@@ -286,8 +285,6 @@ class AnsibleDeprecatedCommentChecker(BaseTokenChecker):
     has not passed or met the time for removal
     """
 
-    __implements__ = (ITokenChecker,)
-
     name = 'deprecated-comment'
     msgs = {
         'E9601': ("Deprecated core version (%r) found: %s",
@@ -313,15 +310,6 @@ class AnsibleDeprecatedCommentChecker(BaseTokenChecker):
                   "Used when a '#deprecated:' comment specifies an invalid version",
                   {'minversion': (2, 6)}),
     }
-
-    options = (
-        ('min-python-version-db', {
-            'default': None,
-            'type': 'string',
-            'metavar': '<path>',
-            'help': 'The path to the DB mapping paths to minimum Python versions.',
-        }),
-    )
 
     def process_tokens(self, tokens: list[TokenInfo]) -> None:
         for token in tokens:
@@ -353,15 +341,8 @@ class AnsibleDeprecatedCommentChecker(BaseTokenChecker):
             )
         return data
 
-    @functools.cached_property
-    def _min_python_version_db(self) -> dict[str, str]:
-        """A dictionary of absolute file paths and their minimum required Python version."""
-        with open(self.linter.config.min_python_version_db) as db_file:
-            return json.load(db_file)
-
     def _process_python_version(self, token: TokenInfo, data: dict[str, str]) -> None:
-        current_file = self.linter.current_file
-        check_version = self._min_python_version_db[current_file]
+        check_version = '.'.join(map(str, self.linter.config.py_version))
 
         try:
             if LooseVersion(data['python_version']) < LooseVersion(check_version):

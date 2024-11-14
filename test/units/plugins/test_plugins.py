@@ -16,13 +16,11 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import os
 
-from units.compat import unittest
+import unittest
 from unittest.mock import patch, MagicMock
 from ansible.plugins.loader import PluginLoader, PluginPathContext
 
@@ -88,11 +86,11 @@ class TestErrors(unittest.TestCase):
         self.assertPluginLoaderConfigBecomes(None, [])
 
     def test__load_module_source_no_duplicate_names(self):
-        '''
+        """
         This test simulates importing 2 plugins with the same name,
         and validating that the import is short circuited if a file with the same name
         has already been imported
-        '''
+        """
 
         fixture_path = os.path.join(os.path.dirname(__file__), 'loader_fixtures')
 
@@ -106,10 +104,10 @@ class TestErrors(unittest.TestCase):
     @patch('ansible.plugins.loader.glob')
     @patch.object(PluginLoader, '_get_paths_with_context')
     def test_all_no_duplicate_names(self, gp_mock, glob_mock):
-        '''
+        """
         This test goes along with ``test__load_module_source_no_duplicate_names``
         and ensures that we ignore duplicate imports on multiple paths
-        '''
+        """
 
         fixture_path = os.path.join(os.path.dirname(__file__), 'loader_fixtures')
 

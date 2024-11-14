@@ -14,9 +14,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
-__metaclass__ = type
 
 import os
 import uuid
@@ -79,7 +78,7 @@ class ActionModule(ActionBase):
             except ValueError as exc:
                 return dict(failed=True, msg=to_text(exc))
 
-            # Now src has resolved file write to disk in current diectory for scp
+            # Now src has resolved file write to disk in current directory for scp
             src = self._task.args.get("src")
             filename = str(uuid.uuid4())
             cwd = self._loader.get_basedir()
@@ -138,7 +137,7 @@ class ActionModule(ActionBase):
                 result["msg"] = "Exception received: %s" % exc
 
         if mode == "text":
-            # Cleanup tmp file expanded wih ansible vars
+            # Cleanup tmp file expanded with ansible vars
             os.remove(output_file)
 
         result["changed"] = changed

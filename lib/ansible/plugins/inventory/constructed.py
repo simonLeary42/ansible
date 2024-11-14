@@ -1,10 +1,9 @@
 # Copyright (c) 2017 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
     name: constructed
     version_added: "2.4"
     short_description: Uses Jinja2 to construct vars and groups based on existing inventory.
@@ -26,15 +25,17 @@ DOCUMENTATION = '''
                 - The host_group_vars (enabled by default) 'vars plugin' is the one responsible for reading host_vars/ and group_vars/ directories.
                 - This will execute all vars plugins, even those that are not supposed to execute at the 'inventory' stage.
                   See vars plugins docs for details on 'stage'.
+                - Implicit groups, such as 'all' or 'ungrouped', need to be explicitly defined in any previous inventory to apply the
+                  corresponding group_vars
             required: false
             default: false
             type: boolean
             version_added: '2.11'
     extends_documentation_fragment:
       - constructed
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
     # inventory.config file in YAML format
     plugin: ansible.builtin.constructed
     strict: False
@@ -76,7 +77,7 @@ EXAMPLES = r'''
         # this creates a common parent group for all ec2 availability zones
         - key: placement.availability_zone
           parent_group: all_ec2_zones
-'''
+"""
 
 import os
 
@@ -113,11 +114,11 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         return valid
 
     def get_all_host_vars(self, host, loader, sources):
-        ''' requires host object '''
+        """ requires host object """
         return combine_vars(self.host_groupvars(host, loader, sources), self.host_vars(host, loader, sources))
 
     def host_groupvars(self, host, loader, sources):
-        ''' requires host object '''
+        """ requires host object """
         gvars = get_group_vars(host.get_groups())
 
         if self.get_option('use_vars_plugins'):
@@ -126,7 +127,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         return gvars
 
     def host_vars(self, host, loader, sources):
-        ''' requires host object '''
+        """ requires host object """
         hvars = host.get_vars()
 
         if self.get_option('use_vars_plugins'):
@@ -135,7 +136,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         return hvars
 
     def parse(self, inventory, loader, path, cache=False):
-        ''' parses the inventory file '''
+        """ parses the inventory file """
 
         super(InventoryModule, self).parse(inventory, loader, path, cache=cache)
 

@@ -16,21 +16,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
-# Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import os
 import re
 from importlib import import_module
 
 from ansible import constants as C
-from units.compat import unittest
+import unittest
 from unittest.mock import patch, MagicMock, mock_open
 
 from ansible.errors import AnsibleError, AnsibleAuthenticationFailure
-from ansible.module_utils.six import text_type
-from ansible.module_utils.six.moves import shlex_quote, builtins
+import builtins
+import shlex
 from ansible.module_utils.common.text.converters import to_bytes
 from ansible.playbook.play_context import PlayContext
 from ansible.plugins.action import ActionBase
@@ -197,7 +195,7 @@ class TestActionBase(unittest.TestCase):
 
         # create a mock connection, so we don't actually try and connect to things
         def env_prefix(**args):
-            return ' '.join(['%s=%s' % (k, shlex_quote(text_type(v))) for k, v in args.items()])
+            return ' '.join(['%s=%s' % (k, shlex.quote(str(v))) for k, v in args.items()])
         mock_connection = MagicMock()
         mock_connection._shell.env_prefix.side_effect = env_prefix
 
@@ -361,9 +359,9 @@ class TestActionBase(unittest.TestCase):
                 execute=execute)
 
         def get_shell_option_for_arg(args_kv, default):
-            '''A helper for get_shell_option. Returns a function that, if
+            """A helper for get_shell_option. Returns a function that, if
             called with ``option`` that exists in args_kv, will return the
-            value, else will return ``default`` for every other given arg'''
+            value, else will return ``default`` for every other given arg"""
             def _helper(option, *args, **kwargs):
                 return args_kv.get(option, default)
             return _helper
@@ -857,10 +855,10 @@ class TestActionBaseParseReturnedData(unittest.TestCase):
     def test_json_facts_add_host(self):
         action_base = _action_base()
         rc = 0
-        stdout = '''{"ansible_facts": {"foo": "bar", "ansible_blip": "blip_value"},
+        stdout = """{"ansible_facts": {"foo": "bar", "ansible_blip": "blip_value"},
         "add_host": {"host_vars": {"some_key": ["whatever the add_host object is"]}
         }
-        }\n'''
+        }\n"""
         err = ''
 
         returned_data = {'rc': rc,

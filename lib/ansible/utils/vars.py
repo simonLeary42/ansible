@@ -15,12 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
-# Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import keyword
-import random
+import secrets
 import uuid
 
 from collections.abc import MutableMapping, MutableSequence
@@ -34,12 +32,10 @@ from ansible.module_utils.common.text.converters import to_native, to_text
 from ansible.parsing.splitter import parse_kv
 
 
-ADDITIONAL_PY2_KEYWORDS = frozenset(("True", "False", "None"))
-
 _MAXSIZE = 2 ** 32
 cur_id = 0
 node_mac = ("%012x" % uuid.getnode())[:12]
-random_int = ("%08x" % random.randint(0, _MAXSIZE))[:8]
+random_int = ("%08x" % secrets.randbelow(_MAXSIZE))[:8]
 
 
 def get_unique_id():
@@ -85,11 +81,11 @@ def combine_vars(a, b, merge=None):
 
     if merge or merge is None and C.DEFAULT_HASH_BEHAVIOUR == "merge":
         return merge_hash(a, b)
-    else:
-        # HASH_BEHAVIOUR == 'replace'
-        _validate_mutable_mappings(a, b)
-        result = a | b
-        return result
+
+    # HASH_BEHAVIOUR == 'replace'
+    _validate_mutable_mappings(a, b)
+    result = a | b
+    return result
 
 
 def merge_hash(x, y, recursive=True, list_merge='replace'):
@@ -109,6 +105,8 @@ def merge_hash(x, y, recursive=True, list_merge='replace'):
     #  except performance)
     if x == {} or x == y:
         return y.copy()
+    if y == {}:
+        return x
 
     # in the following we will copy elements from y to x, but
     # we don't want to modify x, so we create a copy of it
@@ -237,7 +235,22 @@ def load_options_vars(version):
     return load_options_vars.options_vars
 
 
-def _isidentifier_PY3(ident):
+def isidentifier(ident):
+    """Determine if string is valid identifier.
+
+    The purpose of this function is to be used to validate any variables created in
+    a play to be valid Python identifiers and to not conflict with Python keywords
+    to prevent unexpected behavior. Since Python 2 and Python 3 differ in what
+    a valid identifier is, this function unifies the validation so playbooks are
+    portable between the two. The following changes were made:
+
+        * disallow non-ascii characters (Python 3 allows for them as opposed to Python 2)
+
+    :arg ident: A text string of identifier to check. Note: It is callers
+        responsibility to convert ident to text if it is not already.
+
+    Originally posted at https://stackoverflow.com/a/29586366
+    """
     if not isinstance(ident, string_types):
         return False
 
@@ -251,25 +264,3 @@ def _isidentifier_PY3(ident):
         return False
 
     return True
-
-
-isidentifier = _isidentifier_PY3
-
-
-isidentifier.__doc__ = """Determine if string is valid identifier.
-
-The purpose of this function is to be used to validate any variables created in
-a play to be valid Python identifiers and to not conflict with Python keywords
-to prevent unexpected behavior. Since Python 2 and Python 3 differ in what
-a valid identifier is, this function unifies the validation so playbooks are
-portable between the two. The following changes were made:
-
-    * disallow non-ascii characters (Python 3 allows for them as opposed to Python 2)
-    * True, False and None are reserved keywords (these are reserved keywords
-      on Python 3 as opposed to Python 2)
-
-:arg ident: A text string of identifier to check. Note: It is callers
-    responsibility to convert ident to text if it is not already.
-
-Originally posted at http://stackoverflow.com/a/29586366
-"""

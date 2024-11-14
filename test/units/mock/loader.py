@@ -15,9 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
-# Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import os
 
@@ -37,7 +35,7 @@ class DictDataLoader(DataLoader):
         self._build_known_directories()
         self._vault_secrets = None
 
-    def load_from_file(self, path, cache=True, unsafe=False):
+    def load_from_file(self, path, cache='all', unsafe=False):
         data = None
         path = to_text(path)
         if path in self._file_mapping:

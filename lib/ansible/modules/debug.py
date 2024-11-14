@@ -3,11 +3,10 @@
 # Copyright: (c) 2012 Dag Wieers <dag@wieers.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
+from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: debug
 short_description: Print statements during execution
@@ -15,7 +14,7 @@ description:
 - This module prints statements during execution and can be useful
   for debugging variables or expressions without necessarily halting
   the playbook.
-- Useful for debugging together with the 'when:' directive.
+- Useful for debugging together with the C(when:) directive.
 - This module is also supported for Windows targets.
 version_added: '0.8'
 options:
@@ -69,9 +68,9 @@ seealso:
 author:
 - Dag Wieers (@dagwieers)
 - Michael DeHaan
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Print the gateway for each host when defined
   ansible.builtin.debug:
     msg: System {{ inventory_hostname }} has gateway {{ ansible_default_ipv4.gateway }}
@@ -96,4 +95,4 @@ EXAMPLES = r'''
     msg:
     - "Provisioning based on YOUR_KEY which is: {{ lookup('ansible.builtin.env', 'YOUR_KEY') }}"
     - "These servers were built using the password of '{{ password_used }}'. Please retain this for later use."
-'''
+"""

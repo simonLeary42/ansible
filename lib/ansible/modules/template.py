@@ -5,11 +5,10 @@
 
 # This is a virtual module that is entirely implemented as an action plugin and runs on the controller
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
+from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: template
 version_added: historical
@@ -61,9 +60,9 @@ attributes:
       support: full
     vault:
       support: full
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Template a file to /etc/file.conf
   ansible.builtin.template:
     src: /mytemplates/foo.j2
@@ -86,7 +85,7 @@ EXAMPLES = r'''
     dest: /etc/named.conf
     group: named
     setype: named_conf_t
-    mode: 0640
+    mode: '0640'
 
 - name: Create a DOS-style text file from a template
   ansible.builtin.template:
@@ -109,4 +108,57 @@ EXAMPLES = r'''
     mode: '0600'
     validate: /usr/sbin/sshd -t -f %s
     backup: yes
-'''
+"""
+
+RETURN = r"""
+dest:
+    description: Destination file/path, equal to the value passed to I(dest).
+    returned: success
+    type: str
+    sample: /path/to/file.txt
+checksum:
+    description: SHA1 checksum of the rendered file
+    returned: always
+    type: str
+    sample: 373296322247ab85d26d5d1257772757e7afd172
+uid:
+    description: Numeric id representing the file owner
+    returned: success
+    type: int
+    sample: 1003
+gid:
+    description: Numeric id representing the group of the owner
+    returned: success
+    type: int
+    sample: 1003
+owner:
+    description: User name of owner
+    returned: success
+    type: str
+    sample: httpd
+group:
+    description: Group name of owner
+    returned: success
+    type: str
+    sample: www-data
+md5sum:
+    description: MD5 checksum of the rendered file
+    returned: changed
+    type: str
+    sample: d41d8cd98f00b204e9800998ecf8427e
+mode:
+    description: Unix permissions of the file in octal representation as a string
+    returned: success
+    type: str
+    sample: 1755
+size:
+    description: Size of the rendered file in bytes
+    returned: success
+    type: int
+    sample: 42
+src:
+    description: Source file used for the copy on the target machine.
+    returned: changed
+    type: str
+    sample: /home/httpd/.ansible/tmp/ansible-tmp-1423796390.97-147729857856000/source
+"""

@@ -3,10 +3,9 @@
 # Copyright: (c) 2020, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: reset_pulp
 short_description: Resets pulp back to the initial state
@@ -49,9 +48,9 @@ options:
     elements: str
 author:
 - Jordan Borean (@jborean93)
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: reset pulp content
   reset_pulp:
     pulp_api: http://galaxy:24817
@@ -62,11 +61,11 @@ EXAMPLES = '''
     namespaces:
     - namespace1
     - namespace2
-'''
+"""
 
-RETURN = '''
+RETURN = """
 #
-'''
+"""
 
 import json
 

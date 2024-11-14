@@ -2,10 +2,9 @@
 # (c) 2015, 2017 Toshio Kuratomi <tkuratomi@ansible.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (annotations, absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
     name: local
     short_description: execute on controller
     description:
@@ -16,19 +15,19 @@ DOCUMENTATION = '''
         - connection_pipelining
     notes:
         - The remote user is ignored, the user with which the ansible CLI was executed is used instead.
-'''
+"""
 
 import fcntl
 import getpass
 import os
 import pty
+import selectors
 import shutil
 import subprocess
 import typing as t
 
 import ansible.constants as C
 from ansible.errors import AnsibleError, AnsibleFileNotFound
-from ansible.module_utils.compat import selectors
 from ansible.module_utils.six import text_type, binary_type
 from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
 from ansible.plugins.connection import ConnectionBase
@@ -39,7 +38,7 @@ display = Display()
 
 
 class Connection(ConnectionBase):
-    ''' Local based connections '''
+    """ Local based connections """
 
     transport = 'local'
     has_pipelining = True
@@ -55,7 +54,7 @@ class Connection(ConnectionBase):
             self.default_user = ""
 
     def _connect(self) -> Connection:
-        ''' connect to the local host; nothing to do here '''
+        """ connect to the local host; nothing to do here """
 
         # Because we haven't made any remote connection we're running as
         # the local user, rather than as whatever is configured in remote_user.
@@ -67,7 +66,7 @@ class Connection(ConnectionBase):
         return self
 
     def exec_command(self, cmd: str, in_data: bytes | None = None, sudoable: bool = True) -> tuple[int, bytes, bytes]:
-        ''' run a command on the local host '''
+        """ run a command on the local host """
 
         super(Connection, self).exec_command(cmd, in_data=in_data, sudoable=sudoable)
 
@@ -90,7 +89,7 @@ class Connection(ConnectionBase):
         master = None
         stdin = subprocess.PIPE
         if sudoable and self.become and self.become.expect_prompt() and not self.get_option('pipelining'):
-            # Create a pty if sudoable for privlege escalation that needs it.
+            # Create a pty if sudoable for privilege escalation that needs it.
             # Falls back to using a standard pipe if this fails, which may
             # cause the command to fail in certain situations where we are escalating
             # privileges or the command otherwise needs a pty.
@@ -165,7 +164,7 @@ class Connection(ConnectionBase):
         return (p.returncode, stdout, stderr)
 
     def put_file(self, in_path: str, out_path: str) -> None:
-        ''' transfer a file from local to local '''
+        """ transfer a file from local to local """
 
         super(Connection, self).put_file(in_path, out_path)
 
@@ -183,7 +182,7 @@ class Connection(ConnectionBase):
             raise AnsibleError("failed to transfer file to {0}: {1}".format(to_native(out_path), to_native(e)))
 
     def fetch_file(self, in_path: str, out_path: str) -> None:
-        ''' fetch a file from local to local -- for compatibility '''
+        """ fetch a file from local to local -- for compatibility """
 
         super(Connection, self).fetch_file(in_path, out_path)
 
@@ -191,5 +190,5 @@ class Connection(ConnectionBase):
         self.put_file(in_path, out_path)
 
     def close(self) -> None:
-        ''' terminate the connection; nothing to do here '''
+        """ terminate the connection; nothing to do here """
         self._connected = False

@@ -13,8 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import glob
 import os
@@ -295,8 +294,6 @@ class LinuxNetwork(Network):
                             default_ipv6['type'] = interfaces[device].get("type", "unknown")
                         if not address == '::1':
                             ips['all_ipv6_addresses'].append(address)
-
-            ip_path = self.module.get_bin_path("ip")
 
             args = [ip_path, 'addr', 'show', 'primary', 'dev', device]
             rc, primary_data, stderr = self.module.run_command(args, errors='surrogate_then_replace')

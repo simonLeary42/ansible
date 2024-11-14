@@ -14,8 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
 import datetime
 import time
@@ -29,12 +28,12 @@ display = Display()
 
 
 class ActionModule(ActionBase):
-    ''' pauses execution for a length or time, or until input is received '''
+    """ pauses execution for a length or time, or until input is received """
 
     BYPASS_HOST_LOOP = True
 
     def run(self, tmp=None, task_vars=None):
-        ''' run the pause action module '''
+        """ run the pause action module """
         if task_vars is None:
             task_vars = dict()
 

@@ -3,11 +3,10 @@
 # Copyright: (c) 2014, Brian Coca <brian.coca+dev@gmail.com>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
+from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: getent
 short_description: A wrapper to the unix getent utility
@@ -59,9 +58,9 @@ notes:
    - Not all databases support enumeration, check system documentation for details.
 author:
 - Brian Coca (@bcoca)
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Get root user info
   ansible.builtin.getent:
     database: passwd
@@ -98,9 +97,9 @@ EXAMPLES = '''
 - ansible.builtin.debug:
     var: ansible_facts.getent_shadow
 
-'''
+"""
 
-RETURN = '''
+RETURN = """
 ansible_facts:
   description: Facts to add to ansible_facts.
   returned: always
@@ -110,10 +109,10 @@ ansible_facts:
       description:
         - A list of results or a single result as a list of the fields the db provides
         - The list elements depend on the database queried, see getent man page for the structure
-        - Starting at 2.11 it now returns multiple duplicate entries, previouslly it only returned the last one
+        - Starting at 2.11 it now returns multiple duplicate entries, previously it only returned the last one
       returned: always
       type: list
-'''
+"""
 
 import traceback
 

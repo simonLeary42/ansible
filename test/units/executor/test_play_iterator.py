@@ -15,11 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
-# Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import annotations
 
-from units.compat import unittest
+import unittest
 from unittest.mock import patch, MagicMock
 
 from ansible.executor.play_iterator import HostState, PlayIterator, IteratingStates, FailedStates
@@ -152,10 +150,6 @@ class TestPlayIterator(unittest.TestCase):
         (host_state, task) = itr.get_next_task_for_host(hosts[0])
         self.assertIsNotNone(task)
         self.assertEqual(task.action, 'debug')
-        # implicit meta: flush_handlers
-        (host_state, task) = itr.get_next_task_for_host(hosts[0])
-        self.assertIsNotNone(task)
-        self.assertEqual(task.action, 'meta')
         # role task
         (host_state, task) = itr.get_next_task_for_host(hosts[0])
         self.assertIsNotNone(task)
@@ -266,18 +260,10 @@ class TestPlayIterator(unittest.TestCase):
         self.assertIsNotNone(task)
         self.assertEqual(task.action, 'debug')
         self.assertEqual(task.args, dict(msg="this is a sub-block in an always"))
-        # implicit meta: flush_handlers
-        (host_state, task) = itr.get_next_task_for_host(hosts[0])
-        self.assertIsNotNone(task)
-        self.assertEqual(task.action, 'meta')
         # post task
         (host_state, task) = itr.get_next_task_for_host(hosts[0])
         self.assertIsNotNone(task)
         self.assertEqual(task.action, 'debug')
-        # implicit meta: flush_handlers
-        (host_state, task) = itr.get_next_task_for_host(hosts[0])
-        self.assertIsNotNone(task)
-        self.assertEqual(task.action, 'meta')
         # end of iteration
         (host_state, task) = itr.get_next_task_for_host(hosts[0])
         self.assertIsNone(task)
@@ -342,11 +328,6 @@ class TestPlayIterator(unittest.TestCase):
             all_vars=dict(),
         )
 
-        # implicit meta: flush_handlers
-        (host_state, task) = itr.get_next_task_for_host(hosts[0])
-        self.assertIsNotNone(task)
-        self.assertEqual(task.action, 'meta')
-        self.assertEqual(task.args, dict(_raw_params='flush_handlers'))
         # get the first task
         (host_state, task) = itr.get_next_task_for_host(hosts[0])
         self.assertIsNotNone(task)
@@ -354,7 +335,7 @@ class TestPlayIterator(unittest.TestCase):
         self.assertEqual(task.args, dict(msg='this is the first task'))
         # fail the host
         itr.mark_host_failed(hosts[0])
-        # get the resuce task
+        # get the rescue task
         (host_state, task) = itr.get_next_task_for_host(hosts[0])
         self.assertIsNotNone(task)
         self.assertEqual(task.action, 'debug')
@@ -364,16 +345,6 @@ class TestPlayIterator(unittest.TestCase):
         self.assertIsNotNone(task)
         self.assertEqual(task.action, 'debug')
         self.assertEqual(task.args, dict(msg='this is the always task'))
-        # implicit meta: flush_handlers
-        (host_state, task) = itr.get_next_task_for_host(hosts[0])
-        self.assertIsNotNone(task)
-        self.assertEqual(task.action, 'meta')
-        self.assertEqual(task.args, dict(_raw_params='flush_handlers'))
-        # implicit meta: flush_handlers
-        (host_state, task) = itr.get_next_task_for_host(hosts[0])
-        self.assertIsNotNone(task)
-        self.assertEqual(task.action, 'meta')
-        self.assertEqual(task.args, dict(_raw_params='flush_handlers'))
         # end of iteration
         (host_state, task) = itr.get_next_task_for_host(hosts[0])
         self.assertIsNone(task)
