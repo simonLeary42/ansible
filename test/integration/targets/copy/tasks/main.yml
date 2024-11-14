@@ -116,6 +116,7 @@
       copy:
         src: "{{ role_path }}/files/multi-diff-test"
         dest: "{{ local_temp_dir }}/multi-diff-test"
+        local_follow: false
       register: multi_diff_test
       diff: true
 
