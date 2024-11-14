@@ -198,6 +198,7 @@ def _walk_dirs(topdir, base_path=None, local_follow=False, trailing_slash_detect
 
     return r_files
 
+
 def combine_result_diffs(dest, source):
     if not source.get("diff", None):
         return
@@ -205,6 +206,7 @@ def combine_result_diffs(dest, source):
         dest["diff"] += source["diff"]
     else:
         dest["diff"].append(source["diff"])
+
 
 class ActionModule(ActionBase):
 
