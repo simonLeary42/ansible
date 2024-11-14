@@ -128,7 +128,7 @@
       file:
         path: "{{ role_path }}/files/multi-diff-test/link2file"
         state: link
-        dest: file
+        src: file
       delegate_to: localhost
 
     - name: multi diff test
