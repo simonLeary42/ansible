@@ -680,17 +680,17 @@ def ensure_directory(path, follow, recurse, timestamps):
     # previous state == directory
     #
 
-    attributes_tempstamp_diffs = []
+    attributes_timestamp_diffs = []
     main_attributes_timestamp_diff = initial_diff(path, "directory", "directory")
     changed = module.set_fs_attributes_if_different(file_args, False, main_attributes_timestamp_diff, expand=False)
     changed |= update_timestamp_for_file(file_args['path'], mtime, atime, main_attributes_timestamp_diff)
     if changed:
-        attributes_tempstamp_diffs.append(main_attributes_timestamp_diff)
+        attributes_timestamp_diffs.append(main_attributes_timestamp_diff)
 
     if recurse:
-        changed |= recursive_set_attributes(b_path, follow, file_args, mtime, atime, attributes_tempstamp_diffs)
+        changed |= recursive_set_attributes(b_path, follow, file_args, mtime, atime, attributes_timestamp_diffs)
 
-    return {'path': path, 'changed': changed, 'diff': attributes_tempstamp_diffs}
+    return {'path': path, 'changed': changed, 'diff': attributes_timestamp_diffs}
 
 
 def ensure_symlink(path, src, follow, force, timestamps):
