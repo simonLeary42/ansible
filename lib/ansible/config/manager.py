@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import atexit
+import decimal
 import configparser
 import os
 import os.path
@@ -16,6 +17,7 @@ from collections.abc import Mapping, Sequence
 from jinja2.nativetypes import NativeEnvironment
 
 from ansible.errors import AnsibleOptionsError, AnsibleError, AnsibleRequiredOptionError
+from ansible.module_utils.common.sentinel import Sentinel
 from ansible.module_utils.common.text.converters import to_text, to_bytes, to_native
 from ansible.module_utils.common.yaml import yaml_load
 from ansible.module_utils.six import string_types
@@ -51,7 +53,7 @@ GALAXY_SERVER_ADDITIONAL = {
 
 
 def _get_entry(plugin_type, plugin_name, config):
-    ''' construct entry for requested config '''
+    """ construct entry for requested config """
     entry = ''
     if plugin_type:
         entry += 'plugin_type: %s ' % plugin_type
@@ -63,7 +65,7 @@ def _get_entry(plugin_type, plugin_name, config):
 
 # FIXME: see if we can unify in module_utils with similar function used by argspec
 def ensure_type(value, value_type, origin=None, origin_ftype=None):
-    ''' return a configuration variable with casting
+    """ return a configuration variable with casting
     :arg value: The value to ensure correct typing of
     :kwarg value_type: The type of the value.  This can be any of the following strings:
         :boolean: sets the value to a True or False value
@@ -86,7 +88,7 @@ def ensure_type(value, value_type, origin=None, origin_ftype=None):
             tildes's in the value.
         :str: Sets the value to string types.
         :string: Same as 'str'
-    '''
+    """
 
     errmsg = ''
     basedir = None
@@ -101,10 +103,18 @@ def ensure_type(value, value_type, origin=None, origin_ftype=None):
             value = boolean(value, strict=False)
 
         elif value_type in ('integer', 'int'):
-            value = int(value)
+            if not isinstance(value, int):
+                try:
+                    if (decimal_value := decimal.Decimal(value)) == (int_part := int(decimal_value)):
+                        value = int_part
+                    else:
+                        errmsg = 'int'
+                except decimal.DecimalException as e:
+                    raise ValueError from e
 
         elif value_type == 'float':
-            value = float(value)
+            if not isinstance(value, float):
+                value = float(value)
 
         elif value_type == 'list':
             if isinstance(value, string_types):
@@ -173,14 +183,14 @@ def ensure_type(value, value_type, origin=None, origin_ftype=None):
                 value = unquote(value)
 
         if errmsg:
-            raise ValueError('Invalid type provided for "%s": %s' % (errmsg, to_native(value)))
+            raise ValueError(f'Invalid type provided for "{errmsg}": {value!r}')
 
     return to_text(value, errors='surrogate_or_strict', nonstring='passthru')
 
 
 # FIXME: see if this can live in utils/path
 def resolve_path(path, basedir=None):
-    ''' resolve relative or 'variable' paths '''
+    """ resolve relative or 'variable' paths """
     if '{{CWD}}' in path:  # allow users to force CWD using 'magic' {{CWD}}
         path = path.replace('{{CWD}}', os.getcwd())
 
@@ -205,7 +215,7 @@ def get_config_type(cfile):
 
 # FIXME: can move to module_utils for use for ini plugins also?
 def get_ini_config_value(p, entry):
-    ''' returns the value of last ini entry found '''
+    """ returns the value of last ini entry found """
     value = None
     if p is not None:
         try:
@@ -216,22 +226,20 @@ def get_ini_config_value(p, entry):
 
 
 def find_ini_config_file(warnings=None):
-    ''' Load INI Config File order(first found is used): ENV, CWD, HOME, /etc/ansible '''
+    """ Load INI Config File order(first found is used): ENV, CWD, HOME, /etc/ansible """
     # FIXME: eventually deprecate ini configs
 
     if warnings is None:
         # Note: In this case, warnings does nothing
         warnings = set()
 
-    # A value that can never be a valid path so that we can tell if ANSIBLE_CONFIG was set later
-    # We can't use None because we could set path to None.
-    SENTINEL = object
-
     potential_paths = []
 
+    # A value that can never be a valid path so that we can tell if ANSIBLE_CONFIG was set later
+    # We can't use None because we could set path to None.
     # Environment setting
-    path_from_env = os.getenv("ANSIBLE_CONFIG", SENTINEL)
-    if path_from_env is not SENTINEL:
+    path_from_env = os.getenv("ANSIBLE_CONFIG", Sentinel)
+    if path_from_env is not Sentinel:
         path_from_env = unfrackpath(path_from_env, follow=False)
         if os.path.isdir(to_bytes(path_from_env)):
             path_from_env = os.path.join(path_from_env, "ansible.cfg")
@@ -281,7 +289,7 @@ def find_ini_config_file(warnings=None):
 
 
 def _add_base_defs_deprecations(base_defs):
-    '''Add deprecation source 'ansible.builtin' to deprecations in base.yml'''
+    """Add deprecation source 'ansible.builtin' to deprecations in base.yml"""
     def process(entry):
         if 'deprecated' in entry:
             entry['deprecated']['collection_name'] = 'ansible.builtin'
@@ -380,7 +388,7 @@ class ConfigManager(object):
             "Missing base YAML definition file (bad install?): %s" % to_native(yml_file))
 
     def _parse_config_file(self, cfile=None):
-        ''' return flat configuration settings from file(s) '''
+        """ return flat configuration settings from file(s) """
         # TODO: take list of files with merge/nomerge
 
         if cfile is None:
@@ -407,7 +415,7 @@ class ConfigManager(object):
                 raise AnsibleOptionsError("Unsupported configuration file type: %s" % to_native(ftype))
 
     def _find_yaml_config_files(self):
-        ''' Load YAML Config Files in order, check merge flags, keep origin of settings'''
+        """ Load YAML Config Files in order, check merge flags, keep origin of settings"""
         pass
 
     def get_plugin_options(self, plugin_type, name, keys=None, variables=None, direct=None):
@@ -459,7 +467,7 @@ class ConfigManager(object):
         return has
 
     def get_configuration_definitions(self, plugin_type=None, name=None, ignore_private=False):
-        ''' just list the possible settings, either base or for specific plugins or plugin '''
+        """ just list the possible settings, either base or for specific plugins or plugin """
 
         ret = {}
         if plugin_type is None:
@@ -476,7 +484,7 @@ class ConfigManager(object):
         return ret
 
     def _loop_entries(self, container, entry_list):
-        ''' repeat code for value entry assignment '''
+        """ repeat code for value entry assignment """
 
         value = None
         origin = None
@@ -502,7 +510,7 @@ class ConfigManager(object):
         return value, origin
 
     def get_config_value(self, config, cfile=None, plugin_type=None, plugin_name=None, keys=None, variables=None, direct=None):
-        ''' wrapper '''
+        """ wrapper """
 
         try:
             value, _drop = self.get_config_value_and_origin(config, cfile=cfile, plugin_type=plugin_type, plugin_name=plugin_name,
@@ -514,7 +522,7 @@ class ConfigManager(object):
         return value
 
     def get_config_value_and_origin(self, config, cfile=None, plugin_type=None, plugin_name=None, keys=None, variables=None, direct=None):
-        ''' Given a config key figure out the actual value and report on the origin of the settings '''
+        """ Given a config key figure out the actual value and report on the origin of the settings """
         if cfile is None:
             # use default config
             cfile = self._config_file
@@ -672,3 +680,19 @@ class ConfigManager(object):
             self._plugins[plugin_type] = {}
 
         self._plugins[plugin_type][name] = defs
+
+    @staticmethod
+    def get_deprecated_msg_from_config(dep_docs, include_removal=False, collection_name=None):
+
+        removal = ''
+        if include_removal:
+            if 'removed_at_date' in dep_docs:
+                removal = f"Will be removed in a release after {dep_docs['removed_at_date']}\n\t"
+            elif collection_name:
+                removal = f"Will be removed in: {collection_name} {dep_docs['removed_in']}\n\t"
+            else:
+                removal = f"Will be removed in: Ansible {dep_docs['removed_in']}\n\t"
+
+        # TODO: choose to deprecate either singular or plural
+        alt = dep_docs.get('alternatives', dep_docs.get('alternative', 'none'))
+        return f"Reason: {dep_docs['why']}\n\t{removal}Alternatives: {alt}"

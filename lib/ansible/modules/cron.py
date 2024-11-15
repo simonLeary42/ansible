@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: cron
 short_description: Manage cron.d and crontab entries
@@ -131,6 +131,9 @@ options:
     version_added: "2.1"
 requirements:
   - cron (any 'vixie cron' conformant variant, like cronie)
+notes:
+  - If you are experiencing permissions issues with cron and MacOS,
+    you should see the official MacOS documentation for further information.
 author:
   - Dane Summers (@dsummersl)
   - Mike Grozak (@rhaido)
@@ -147,9 +150,9 @@ attributes:
     platform:
         support: full
         platforms: posix
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Ensure a job that runs at 2 and 5 exists. Creates an entry like "0 5,2 * * ls -alh > /dev/null"
   ansible.builtin.cron:
     name: "check dirs"
@@ -202,9 +205,9 @@ EXAMPLES = r'''
     name: APP_HOME
     env: yes
     state: absent
-'''
+"""
 
-RETURN = r'''#'''
+RETURN = r"""#"""
 
 import os
 import platform
@@ -259,10 +262,9 @@ class CronTab(object):
         if self.cron_file:
             # read the cronfile
             try:
-                f = open(self.b_cron_file, 'rb')
-                self.n_existing = to_native(f.read(), errors='surrogate_or_strict')
-                self.lines = self.n_existing.splitlines()
-                f.close()
+                with open(self.b_cron_file, 'rb') as f:
+                    self.n_existing = to_native(f.read(), errors='surrogate_or_strict')
+                    self.lines = self.n_existing.splitlines()
             except IOError:
                 # cron file does not exist
                 return
@@ -325,7 +327,7 @@ class CronTab(object):
             os.unlink(path)
 
             if rc != 0:
-                self.module.fail_json(msg=err)
+                self.module.fail_json(msg=f"Failed to install new cronfile: {path}", stderr=err, stdout=out, rc=rc)
 
         # set SELinux permissions
         if self.module.selinux_enabled() and self.cron_file:

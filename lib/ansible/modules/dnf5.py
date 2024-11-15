@@ -358,10 +358,23 @@ libdnf5 = None
 
 def is_installed(base, spec):
     settings = libdnf5.base.ResolveSpecSettings()
-    query = libdnf5.rpm.PackageQuery(base)
-    query.filter_installed()
-    match, nevra = query.resolve_pkg_spec(spec, settings, True)
-    return match
+    installed_query = libdnf5.rpm.PackageQuery(base)
+    installed_query.filter_installed()
+    match, nevra = installed_query.resolve_pkg_spec(spec, settings, True)
+
+    # FIXME use `is_glob_pattern` function when available:
+    # https://github.com/rpm-software-management/dnf5/issues/1563
+    glob_patterns = set("*[?")
+    if any(set(char) & glob_patterns for char in spec):
+        available_query = libdnf5.rpm.PackageQuery(base)
+        available_query.filter_available()
+        available_query.resolve_pkg_spec(spec, settings, True)
+
+        return not (
+            {p.get_name() for p in available_query} - {p.get_name() for p in installed_query}
+        )
+    else:
+        return match
 
 
 def is_newer_version_installed(base, spec):
@@ -438,7 +451,15 @@ class Dnf5Module(YumDnf):
 
     def fail_on_non_existing_plugins(self, base):
         # https://github.com/rpm-software-management/dnf5/issues/1460
-        plugin_names = [p.get_name() for p in base.get_plugins_info()]
+        try:
+            plugin_names = [p.get_name() for p in base.get_plugins_info()]
+        except AttributeError:
+            # plugins functionality requires python3-libdnf5 5.2.0.0+
+            # silently ignore here, the module will fail later when
+            # base.enable_disable_plugins is attempted to be used if
+            # user specifies enable_plugin/disable_plugin
+            return
+
         msg = []
         if enable_unmatched := set(self.enable_plugin).difference(plugin_names):
             msg.append(
@@ -642,7 +663,7 @@ class Dnf5Module(YumDnf):
         results = []
         if self.names == ["*"] and self.state == "latest":
             goal.add_rpm_upgrade(settings)
-        elif self.state in {"install", "present", "latest"}:
+        elif self.state in {"installed", "present", "latest"}:
             upgrade = self.state == "latest"
             for spec in self.names:
                 if is_newer_version_installed(base, spec):
@@ -675,7 +696,7 @@ class Dnf5Module(YumDnf):
         if transaction.get_problems():
             failures = []
             for log_event in transaction.get_resolve_logs():
-                if log_event.get_problem() == libdnf5.base.GoalProblem_NOT_FOUND and self.state in {"install", "present", "latest"}:
+                if log_event.get_problem() == libdnf5.base.GoalProblem_NOT_FOUND and self.state in {"installed", "present", "latest"}:
                     # NOTE dnf module compat
                     failures.append("No package {} available.".format(log_event.get_spec()))
                 else:

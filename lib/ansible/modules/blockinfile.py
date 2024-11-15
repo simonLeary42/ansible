@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: blockinfile
 short_description: Insert/update/remove a text block surrounded by marker lines
@@ -50,12 +50,10 @@ options:
     description:
     - If specified and no begin/ending O(marker) lines are found, the block will be inserted after the last match of specified regular expression.
     - A special value is available; V(EOF) for inserting the block at the end of the file.
-    - If specified regular expression has no matches, V(EOF) will be used instead.
+    - If specified regular expression has no matches or no value is passed, V(EOF) will be used instead.
     - The presence of the multiline flag (?m) in the regular expression controls whether the match is done line by line or with multiple lines.
       This behaviour was added in ansible-core 2.14.
     type: str
-    choices: [ EOF, '*regex*' ]
-    default: EOF
   insertbefore:
     description:
     - If specified and no begin/ending O(marker) lines are found, the block will be inserted before the last match of specified regular expression.
@@ -64,7 +62,6 @@ options:
     - The presence of the multiline flag (?m) in the regular expression controls whether the match is done line by line or with multiple lines.
       This behaviour was added in ansible-core 2.14.
     type: str
-    choices: [ BOF, '*regex*' ]
   create:
     description:
     - Create a new file if it does not exist.
@@ -128,9 +125,9 @@ attributes:
       platforms: posix
     vault:
       support: none
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # Before Ansible 2.3, option 'dest' or 'name' was used instead of 'path'
 - name: Insert/Update "Match User" configuration block in /etc/ssh/sshd_config prepending and appending a new line
   ansible.builtin.blockinfile:
@@ -190,7 +187,7 @@ EXAMPLES = r'''
     insertafter: '(?m)SID_LIST_LISTENER_DG =\n.*\(SID_LIST ='
     marker: "    <!-- {mark} ANSIBLE MANAGED BLOCK -->"
 
-'''
+"""
 
 import re
 import os
@@ -203,9 +200,8 @@ from ansible.module_utils.common.text.converters import to_bytes, to_native
 def write_changes(module, contents, path):
 
     tmpfd, tmpfile = tempfile.mkstemp(dir=module.tmpdir)
-    f = os.fdopen(tmpfd, 'wb')
-    f.write(contents)
-    f.close()
+    with os.fdopen(tmpfd, 'wb') as tf:
+        tf.write(contents)
 
     validate = module.params.get('validate', None)
     valid = not validate

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: uri
 short_description: Interacts with webservices
@@ -22,19 +22,19 @@ options:
       - 'When a list is provided, all ciphers are joined in order with V(:)'
       - See the L(OpenSSL Cipher List Format,https://www.openssl.org/docs/manmaster/man1/openssl-ciphers.html#CIPHER-LIST-FORMAT)
         for more details.
-      - The available ciphers is dependent on the Python and OpenSSL/LibreSSL versions
+      - The available ciphers is dependent on the Python and OpenSSL/LibreSSL versions.
     type: list
     elements: str
     version_added: '2.14'
   decompress:
     description:
-      - Whether to attempt to decompress gzip content-encoded responses
+      - Whether to attempt to decompress gzip content-encoded responses.
     type: bool
     default: true
     version_added: '2.14'
   url:
     description:
-      - HTTP or HTTPS URL in the form (http|https)://host.domain[:port]/path
+      - HTTP or HTTPS URL in the form (http|https)://host.domain[:port]/path.
     type: str
     required: true
   dest:
@@ -58,17 +58,17 @@ options:
         to V(json) it will take an already formatted JSON string or convert a data structure
         into JSON.
       - If O(body_format) is set to V(form-urlencoded) it will convert a dictionary
-        or list of tuples into an 'application/x-www-form-urlencoded' string. (Added in v2.7)
+        or list of tuples into an C(application/x-www-form-urlencoded) string. (Added in v2.7)
       - If O(body_format) is set to V(form-multipart) it will convert a dictionary
-        into 'multipart/form-multipart' body. (Added in v2.10)
+        into C(multipart/form-multipart) body. (Added in v2.10)
     type: raw
   body_format:
     description:
       - The serialization format of the body. When set to V(json), V(form-multipart), or V(form-urlencoded), encodes
-        the body argument, if needed, and automatically sets the Content-Type header accordingly.
+        the body argument, if needed, and automatically sets the C(Content-Type) header accordingly.
       - As of v2.3 it is possible to override the C(Content-Type) header, when
         set to V(json) or V(form-urlencoded) via the O(headers) option.
-      - The 'Content-Type' header cannot be overridden when using V(form-multipart)
+      - The C(Content-Type) header cannot be overridden when using V(form-multipart).
       - V(form-urlencoded) was added in v2.7.
       - V(form-multipart) was added in v2.10.
     type: str
@@ -86,7 +86,7 @@ options:
     description:
       - Whether or not to return the body of the response as a "content" key in
         the dictionary result no matter it succeeded or failed.
-      - Independently of this option, if the reported Content-type is "application/json", then the JSON is
+      - Independently of this option, if the reported C(Content-Type) is C(application/json), then the JSON is
         always loaded into a key called RV(ignore:json) in the dictionary results.
     type: bool
     default: no
@@ -155,7 +155,7 @@ options:
   client_cert:
     description:
       - PEM formatted certificate chain file to be used for SSL client authentication.
-      - This file can also include the key as well, and if the key is included, O(client_key) is not required
+      - This file can also include the key as well, and if the key is included, O(client_key) is not required.
     type: path
     version_added: '2.4'
   client_key:
@@ -166,7 +166,7 @@ options:
     version_added: '2.4'
   ca_path:
     description:
-      - PEM formatted file that contains a CA certificate to be used for validation
+      - PEM formatted file that contains a CA certificate to be used for validation.
     type: path
     version_added: '2.11'
   src:
@@ -195,7 +195,7 @@ options:
     default: true
   unix_socket:
     description:
-    - Path to Unix domain socket to use for connection
+    - Path to Unix domain socket to use for connection.
     type: path
     version_added: '2.8'
   http_agent:
@@ -225,9 +225,9 @@ options:
     version_added: '2.11'
   use_netrc:
     description:
-      - Determining whether to use credentials from ``~/.netrc`` file
-      - By default .netrc is used with Basic authentication headers
-      - When set to False, .netrc credentials are ignored
+      - Determining whether to use credentials from C(~/.netrc) file.
+      - By default C(.netrc) is used with Basic authentication headers.
+      - When V(false), C(.netrc) credentials are ignored.
     type: bool
     default: true
     version_added: '2.14'
@@ -250,9 +250,9 @@ seealso:
 - module: ansible.windows.win_uri
 author:
 - Romeo Theriault (@romeotheriault)
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Check that you can connect (GET) to a page and it returns a status 200
   ansible.builtin.uri:
     url: http://www.example.com
@@ -387,9 +387,9 @@ EXAMPLES = r'''
   uri:
     url: https://example.org
     ciphers: '@SECLEVEL=2:ECDH+AESGCM:ECDH+CHACHA20:ECDH+AES:DHE+AES:!aNULL:!eNULL:!aDSS:!SHA1:!AESCCM'
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 # The return information includes all the HTTP headers in lower-case.
 content:
   description: The response body content.
@@ -438,7 +438,7 @@ url:
   returned: always
   type: str
   sample: https://www.ansible.com/
-'''
+"""
 
 import json
 import os
@@ -527,7 +527,7 @@ def absolute_location(url, location):
 
 
 def kv_list(data):
-    ''' Convert data into a list of key-value tuples '''
+    """ Convert data into a list of key-value tuples """
     if data is None:
         return None
 
@@ -541,7 +541,7 @@ def kv_list(data):
 
 
 def form_urlencoded(body):
-    ''' Convert data into a form-urlencoded string '''
+    """ Convert data into a form-urlencoded string """
     if isinstance(body, string_types):
         return body
 
@@ -605,6 +605,7 @@ def uri(module, url, dest, body, body_format, method, headers, socket_timeout, c
 
 def main():
     argument_spec = url_argument_spec()
+    argument_spec['url']['required'] = True
     argument_spec.update(
         dest=dict(type='path'),
         url_username=dict(type='str', aliases=['user']),

@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: iptables
 short_description: Modify iptables rules
@@ -394,9 +394,9 @@ options:
     type: bool
     default: false
     version_added: "2.15"
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Block specific IP
   ansible.builtin.iptables:
     chain: INPUT
@@ -543,7 +543,7 @@ EXAMPLES = r'''
       - "443"
       - "8081:8083"
     jump: ACCEPT
-'''
+"""
 
 import re
 
@@ -848,6 +848,7 @@ def main():
         required_if=[
             ['jump', 'TEE', ['gateway']],
             ['jump', 'tee', ['gateway']],
+            ['flush', False, ['chain']],
         ]
     )
     args = dict(
@@ -864,10 +865,6 @@ def main():
 
     ip_version = module.params['ip_version']
     iptables_path = module.get_bin_path(BINS[ip_version], True)
-
-    # Check if chain option is required
-    if args['flush'] is False and args['chain'] is None:
-        module.fail_json(msg="Either chain or flush parameter must be specified.")
 
     if module.params.get('log_prefix', None) or module.params.get('log_level', None):
         if module.params['jump'] is None:

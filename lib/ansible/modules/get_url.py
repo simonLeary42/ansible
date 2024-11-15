@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: get_url
 short_description: Downloads files from HTTP, HTTPS, or FTP to node
@@ -219,9 +219,9 @@ seealso:
 - module: ansible.windows.win_get_url
 author:
 - Jan-Piet Mens (@jpmens)
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Download foo.conf
   ansible.builtin.get_url:
     url: http://example.com/path/file.conf
@@ -272,9 +272,9 @@ EXAMPLES = r'''
     dest: /etc/foo.conf
     username: bar
     password: '{{ mysecret }}'
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 backup_file:
     description: name of backup file created after download
     returned: changed and if backup=yes
@@ -365,8 +365,9 @@ url:
     returned: always
     type: str
     sample: https://www.ansible.com/
-'''
+"""
 
+import email.message
 import os
 import re
 import shutil
@@ -439,23 +440,16 @@ def url_get(module, url, dest, use_proxy, last_mod_time, force, timeout=10, head
 
 
 def extract_filename_from_headers(headers):
+    """Extracts a filename from the given dict of HTTP headers.
+
+    Returns the filename if successful, else None.
     """
-    Extracts a filename from the given dict of HTTP headers.
-
-    Looks for the content-disposition header and applies a regex.
-    Returns the filename if successful, else None."""
-    cont_disp_regex = 'attachment; ?filename="?([^"]+)'
-    res = None
-
-    if 'content-disposition' in headers:
-        cont_disp = headers['content-disposition']
-        match = re.match(cont_disp_regex, cont_disp)
-        if match:
-            res = match.group(1)
-            # Try preventing any funny business.
-            res = os.path.basename(res)
-
-    return res
+    msg = email.message.Message()
+    msg['content-disposition'] = headers.get('content-disposition', '')
+    if filename := msg.get_param('filename', header='content-disposition'):
+        # Avoid directory traversal
+        filename = os.path.basename(filename)
+    return filename
 
 
 def is_url(checksum):
@@ -663,6 +657,16 @@ def main():
                              result['checksum_src'] != result['checksum_dest'])
         module.exit_json(msg=info.get('msg', ''), **result)
 
+    # If a checksum was provided, ensure that the temporary file matches this checksum
+    # before moving it to the destination.
+    if checksum != '':
+        tmpsrc_checksum = module.digest_from_file(tmpsrc, algorithm)
+
+        if checksum != tmpsrc_checksum:
+            os.remove(tmpsrc)
+            module.fail_json(msg=f"The checksum for {tmpsrc} did not match {checksum}; it was {tmpsrc_checksum}.", **result)
+
+    # Copy temporary file to destination if necessary
     backup_file = None
     if result['checksum_src'] != result['checksum_dest']:
         try:
@@ -680,13 +684,6 @@ def main():
         result['changed'] = False
         if os.path.exists(tmpsrc):
             os.remove(tmpsrc)
-
-    if checksum != '':
-        destination_checksum = module.digest_from_file(dest, algorithm)
-
-        if checksum != destination_checksum:
-            os.remove(dest)
-            module.fail_json(msg="The checksum for %s did not match %s; it was %s." % (dest, checksum, destination_checksum), **result)
 
     # allow file attribute changes
     file_args = module.load_file_common_arguments(module.params, path=dest)

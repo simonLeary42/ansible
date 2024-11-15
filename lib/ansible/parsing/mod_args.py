@@ -20,19 +20,16 @@ from __future__ import annotations
 import ansible.constants as C
 from ansible.errors import AnsibleParserError, AnsibleError, AnsibleAssertionError
 from ansible.module_utils.six import string_types
+from ansible.module_utils.common.sentinel import Sentinel
 from ansible.module_utils.common.text.converters import to_text
 from ansible.parsing.splitter import parse_kv, split_args
 from ansible.plugins.loader import module_loader, action_loader
 from ansible.template import Templar
 from ansible.utils.fqcn import add_internal_fqcns
-from ansible.utils.sentinel import Sentinel
 
 
-# For filtering out modules correctly below
-FREEFORM_ACTIONS = frozenset(C.MODULE_REQUIRE_ARGS)
-
-RAW_PARAM_MODULES = FREEFORM_ACTIONS.union(add_internal_fqcns((
-    'include',
+# modules formated for user msg
+_BUILTIN_RAW_PARAM_MODULES_SIMPLE = set([
     'include_vars',
     'include_tasks',
     'include_role',
@@ -42,8 +39,12 @@ RAW_PARAM_MODULES = FREEFORM_ACTIONS.union(add_internal_fqcns((
     'group_by',
     'set_fact',
     'meta',
-)))
-
+])
+FREEFORM_ACTIONS_SIMPLE = set(C.MODULE_REQUIRE_ARGS_SIMPLE)
+FREEFORM_ACTIONS = frozenset(C.MODULE_REQUIRE_ARGS)
+RAW_PARAM_MODULES_SIMPLE = _BUILTIN_RAW_PARAM_MODULES_SIMPLE.union(FREEFORM_ACTIONS_SIMPLE)
+# For filtering out modules correctly below, use all permutations
+RAW_PARAM_MODULES = frozenset(add_internal_fqcns(RAW_PARAM_MODULES_SIMPLE)).union(FREEFORM_ACTIONS)
 BUILTIN_TASKS = frozenset(add_internal_fqcns((
     'meta',
     'include_tasks',
@@ -131,12 +132,12 @@ class ModuleArgsParser:
         self.resolved_action = None
 
     def _split_module_string(self, module_string):
-        '''
+        """
         when module names are expressed like:
         action: copy src=a dest=b
         the first part of the string is the name of the module
         and the rest are strings pertaining to the arguments.
-        '''
+        """
 
         tokens = split_args(module_string)
         if len(tokens) > 1:
@@ -145,9 +146,9 @@ class ModuleArgsParser:
             return (tokens[0].strip(), "")
 
     def _normalize_parameters(self, thing, action=None, additional_args=None):
-        '''
+        """
         arguments can be fuzzy.  Deal with all the forms.
-        '''
+        """
 
         additional_args = {} if additional_args is None else additional_args
 
@@ -204,7 +205,7 @@ class ModuleArgsParser:
         return (action, final_args)
 
     def _normalize_new_style_args(self, thing, action):
-        '''
+        """
         deals with fuzziness in new style module invocations
         accepting key=value pairs and dictionaries, and returns
         a dictionary of arguments
@@ -214,7 +215,7 @@ class ModuleArgsParser:
             {'region': 'xyz'}, 'ec2'
         standardized outputs like:
             { _raw_params: 'echo hi', _uses_shell: True }
-        '''
+        """
 
         if isinstance(thing, dict):
             # form is like: { xyz: { x: 2, y: 3 } }
@@ -231,7 +232,7 @@ class ModuleArgsParser:
         return args
 
     def _normalize_old_style_args(self, thing):
-        '''
+        """
         deals with fuzziness in old-style (action/local_action) module invocations
         returns tuple of (module_name, dictionary_args)
 
@@ -241,7 +242,7 @@ class ModuleArgsParser:
            {'module': 'ec2', 'x': 1 }
         standardized outputs like:
            ('ec2', { 'x': 1} )
-        '''
+        """
 
         action = None
         args = None
@@ -269,11 +270,11 @@ class ModuleArgsParser:
         return (action, args)
 
     def parse(self, skip_action_validation=False):
-        '''
+        """
         Given a task in one of the supported forms, parses and returns
         returns the action, arguments, and delegate_to values for the
         task, dealing with all sorts of levels of fuzziness.
-        '''
+        """
 
         thing = None
 
@@ -358,8 +359,8 @@ class ModuleArgsParser:
             if templar.is_template(raw_params):
                 args['_variable_params'] = raw_params
             else:
-                raise AnsibleParserError("this task '%s' has extra params, which is only allowed in the following modules: %s" % (action,
-                                                                                                                                  ", ".join(RAW_PARAM_MODULES)),
-                                         obj=self._task_ds)
+                raise AnsibleParserError(
+                    "this task '%s' has extra params, which is only allowed in the following modules: %s" % (action, ", ".join(RAW_PARAM_MODULES_SIMPLE)),
+                    obj=self._task_ds)
 
         return (action, args, delegate_to)

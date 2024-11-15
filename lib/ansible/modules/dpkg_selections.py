@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: dpkg_selections
 short_description: Dpkg package selection selections
@@ -39,8 +39,8 @@ attributes:
         platforms: debian
 notes:
     - This module will not cause any packages to be installed/removed/purged, use the M(ansible.builtin.apt) module for that.
-'''
-EXAMPLES = '''
+"""
+EXAMPLES = """
 - name: Prevent python from being upgraded
   ansible.builtin.dpkg_selections:
     name: python
@@ -50,7 +50,7 @@ EXAMPLES = '''
   ansible.builtin.dpkg_selections:
     name: python
     selection: install
-'''
+"""
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.locale import get_best_parsable_locale
@@ -68,7 +68,7 @@ def main():
     dpkg = module.get_bin_path('dpkg', True)
 
     locale = get_best_parsable_locale(module)
-    DPKG_ENV = dict(LANG=locale, LC_ALL=locale, LC_MESSAGES=locale, LC_CTYPE=locale)
+    DPKG_ENV = dict(LANG=locale, LC_ALL=locale, LC_MESSAGES=locale, LC_CTYPE=locale, LANGUAGE=locale)
     module.run_command_environ_update = DPKG_ENV
 
     name = module.params['name']

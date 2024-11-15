@@ -24,11 +24,9 @@ import re
 import sys
 import time
 
-from multiprocessing import cpu_count
-from multiprocessing.pool import ThreadPool
-
-from ansible.module_utils.common.text.converters import to_text
+from ansible.module_utils._internal._concurrent import _futures
 from ansible.module_utils.common.locale import get_best_parsable_locale
+from ansible.module_utils.common.text.converters import to_text
 from ansible.module_utils.common.text.formatters import bytes_to_human
 from ansible.module_utils.facts.hardware.base import Hardware, HardwareCollector
 from ansible.module_utils.facts.utils import get_file_content, get_file_lines, get_mount_size
@@ -313,10 +311,10 @@ class LinuxHardware(Hardware):
         return cpu_facts
 
     def get_dmi_facts(self):
-        ''' learn dmi facts from system
+        """ learn dmi facts from system
 
         Try /sys first for dmi related facts.
-        If that is not available, fall back to dmidecode executable '''
+        If that is not available, fall back to dmidecode executable """
 
         dmi_facts = {}
 
@@ -425,13 +423,13 @@ class LinuxHardware(Hardware):
             'NA'
         )
         sysinfo_re = re.compile(
-            r'''
+            r"""
                 ^
                     (?:Manufacturer:\s+(?P<system_vendor>.+))|
                     (?:Type:\s+(?P<product_name>.+))|
                     (?:Sequence\ Code:\s+0+(?P<product_serial>.+))
                 $
-            ''',
+            """,
             re.VERBOSE | re.MULTILINE
         )
         data = get_file_content('/proc/sysinfo')
@@ -577,7 +575,7 @@ class LinuxHardware(Hardware):
 
         # start threads to query each mount
         results = {}
-        pool = ThreadPool(processes=min(len(mtab_entries), cpu_count()))
+        executor = _futures.DaemonThreadPoolExecutor()
         maxtime = timeout.GATHER_TIMEOUT or timeout.DEFAULT_GATHER_TIMEOUT
         for fields in mtab_entries:
             # Transform octal escape sequences
@@ -601,30 +599,29 @@ class LinuxHardware(Hardware):
                 if not self.MTAB_BIND_MOUNT_RE.match(options):
                     mount_info['options'] += ",bind"
 
-            results[mount] = {'info': mount_info,
-                              'extra': pool.apply_async(self.get_mount_info, (mount, device, uuids)),
-                              'timelimit': time.time() + maxtime}
+            results[mount] = {'info': mount_info, 'timelimit': time.monotonic() + maxtime}
+            results[mount]['extra'] = executor.submit(self.get_mount_info, mount, device, uuids)
 
-        pool.close()  # done with new workers, start gc
+        # done with spawning new workers, start gc
+        executor.shutdown()
 
-        # wait for workers and get results
-        while results:
+        while results:  # wait for workers and get results
             for mount in list(results):
                 done = False
                 res = results[mount]['extra']
                 try:
-                    if res.ready():
+                    if res.done():
                         done = True
-                        if res.successful():
-                            mount_size, uuid = res.get()
+                        if res.exception() is None:
+                            mount_size, uuid = res.result()
                             if mount_size:
                                 results[mount]['info'].update(mount_size)
                             results[mount]['info']['uuid'] = uuid or 'N/A'
                         else:
                             # failed, try to find out why, if 'res.successful' we know there are no exceptions
-                            results[mount]['info']['note'] = 'Could not get extra information: %s.' % (to_text(res.get()))
+                            results[mount]['info']['note'] = f'Could not get extra information: {res.exception()}'
 
-                    elif time.time() > results[mount]['timelimit']:
+                    elif time.monotonic() > results[mount]['timelimit']:
                         done = True
                         self.module.warn("Timeout exceeded when getting mount info for %s" % mount)
                         results[mount]['info']['note'] = 'Could not get extra information due to timeout'
@@ -773,10 +770,24 @@ class LinuxHardware(Hardware):
                 if serial:
                     d['serial'] = serial
 
-            for key, test in [('removable', '/removable'),
-                              ('support_discard', '/queue/discard_granularity'),
-                              ]:
-                d[key] = get_file_content(sysdir + test)
+            d['removable'] = get_file_content(sysdir + '/removable')
+
+            # Historically, `support_discard` simply returned the value of
+            # `/sys/block/{device}/queue/discard_granularity`. When its value
+            # is `0`, then the block device doesn't support discards;
+            # _however_, it being greater than zero doesn't necessarily mean
+            # that the block device _does_ support discards.
+            #
+            # Another indication that a block device doesn't support discards
+            # is `/sys/block/{device}/queue/discard_max_hw_bytes` being equal
+            # to `0` (with the same caveat as above). So if either of those are
+            # `0`, set `support_discard` to zero, otherwise set it to the value
+            # of `discard_granularity` for backwards compatibility.
+            d['support_discard'] = (
+                '0'
+                if get_file_content(sysdir + '/queue/discard_max_hw_bytes') == '0'
+                else get_file_content(sysdir + '/queue/discard_granularity')
+            )
 
             if diskname in devs_wwn:
                 d['wwn'] = devs_wwn[diskname]

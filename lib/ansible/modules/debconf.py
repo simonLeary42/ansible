@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: debconf
 short_description: Configure a .deb package
@@ -86,9 +86,9 @@ options:
     default: false
 author:
 - Brian Coca (@bcoca)
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Set default locale to fr_FR.UTF-8
   ansible.builtin.debconf:
     name: locales
@@ -121,9 +121,9 @@ EXAMPLES = r'''
     value: "{{ site_passphrase }}"
     vtype: password
   no_log: True
-'''
+"""
 
-RETURN = r'''#'''
+RETURN = r"""#"""
 
 from ansible.module_utils.common.text.converters import to_text, to_native
 from ansible.module_utils.basic import AnsibleModule
@@ -134,21 +134,24 @@ def get_password_value(module, pkg, question, vtype):
     cmd = [getsel]
     rc, out, err = module.run_command(cmd)
     if rc != 0:
-        module.fail_json(msg="Failed to get the value '%s' from '%s'" % (question, pkg))
+        module.fail_json(msg=f"Failed to get the value '{question}' from '{pkg}': {err}")
 
-    desired_line = None
     for line in out.split("\n"):
-        if line.startswith(pkg):
-            desired_line = line
-            break
+        if not line.startswith(pkg):
+            continue
 
-    if not desired_line:
-        module.fail_json(msg="Failed to find the value '%s' from '%s'" % (question, pkg))
-
-    (dpkg, dquestion, dvtype, dvalue) = desired_line.split()
-    if dquestion == question and dvtype == vtype:
-        return dvalue
-    return ''
+        # line is a collection of tab separated values
+        fields = line.split('\t')
+        if len(fields) <= 3:
+            # No password found, return a blank password
+            return ''
+        try:
+            if fields[1] == question and fields[2] == vtype:
+                # If correct question and question type found, return password value
+                return fields[3]
+        except IndexError:
+            # Fail safe
+            return ''
 
 
 def get_selections(module, pkg):
@@ -173,8 +176,6 @@ def set_selection(module, pkg, question, vtype, value, unseen):
     if unseen:
         cmd.append('-u')
 
-    if vtype == 'boolean':
-        value = value.lower()
     data = ' '.join([pkg, question, vtype, value])
 
     return module.run_command(cmd, data=data)
@@ -209,15 +210,17 @@ def main():
         if vtype is None or value is None:
             module.fail_json(msg="when supplying a question you must supply a valid vtype and value")
 
+        # ensure we compare booleans supplied to the way debconf sees them (true/false strings)
+        if vtype == 'boolean':
+            value = to_text(value).lower()
+
         # if question doesn't exist, value cannot match
         if question not in prev:
             changed = True
         else:
             existing = prev[question]
 
-            # ensure we compare booleans supplied to the way debconf sees them (true/false strings)
             if vtype == 'boolean':
-                value = to_text(value).lower()
                 existing = to_text(prev[question]).lower()
             elif vtype == 'password':
                 existing = get_password_value(module, pkg, question, vtype)
