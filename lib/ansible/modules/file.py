@@ -651,7 +651,7 @@ def ensure_directory(path, follow, recurse, timestamps):
                     curpath = curpath.lstrip('/')
                 b_curpath = to_bytes(curpath, errors='surrogate_or_strict')
                 if not os.path.exists(b_curpath):
-                    mkdir_diff = initial_diff(path, "directory", "absent")
+                    mkdir_diff = initial_diff(curpath, "directory", "absent")
                     mkdir_diffs.append(mkdir_diff)
                     if not module.check_mode:
                         try:
