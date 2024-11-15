@@ -620,7 +620,6 @@ def ensure_directory(path, follow, recurse, timestamps):
         file_args['path'] = path
         prev_state = get_state(b_path)
 
-
     if prev_state == 'absent':
         # Create directory and assign permissions to it
         curpath = ''
