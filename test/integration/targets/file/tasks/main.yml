@@ -411,6 +411,7 @@
     path: "{{remote_tmp_dir_test}}/diff-test"
     owner: 1235
     recurse: true
+  diff: true
   register: change_ownership_recurse
 
 - name: verify that both the directory and the file have diffs
