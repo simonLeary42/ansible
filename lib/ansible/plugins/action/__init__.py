@@ -1354,6 +1354,11 @@ class ActionBase(ABC):
         # diffs before and after it shows an empty diff.
 
         diff = {}
+        diff['before_header'] = destination
+        if content:
+            diff['after_header'] = destination
+        else:
+            diff['after_header'] = source
         display.debug("Going to peek to see if file has changed permissions")
         peek_result = self._execute_module(
             module_name='ansible.legacy.file', module_args=dict(path=destination, _diff_peek=True),
@@ -1382,7 +1387,6 @@ class ActionBase(ABC):
                         dest_contents = base64.b64decode(dest_contents)
                     else:
                         raise AnsibleError("unknown encoding in content option, failed: %s" % to_native(dest_result))
-                    diff['before_header'] = destination
                     diff['before'] = to_text(dest_contents)
 
             if source_file:
@@ -1401,10 +1405,7 @@ class ActionBase(ABC):
                         diff['src_binary'] = 1
                     else:
                         if content:
-                            diff['after_header'] = destination
-                        else:
-                            diff['after_header'] = source
-                        diff['after'] = to_text(src_contents)
+                            diff['after'] = to_text(src_contents)
             else:
                 display.debug(u"source of file passed in")
                 diff['after_header'] = u'dynamically generated'
