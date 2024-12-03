@@ -1404,8 +1404,7 @@ class ActionBase(ABC):
                     if b"\x00" in src_contents:
                         diff['src_binary'] = 1
                     else:
-                        if content:
-                            diff['after'] = to_text(src_contents)
+                        diff['after'] = to_text(src_contents)
             else:
                 display.debug(u"source of file passed in")
                 diff['after_header'] = u'dynamically generated'
