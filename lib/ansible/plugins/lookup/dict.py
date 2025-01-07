@@ -70,7 +70,7 @@ class LookupModule(LookupBase):
         for term in terms:
             # Expect any type of Mapping, notably hostvars
             if not isinstance(term, Mapping):
-                raise AnsibleError(f"lookup dict expects a dictionary, got '{term}' of type {type(term)})")
+                raise AnsibleError(f"the 'dict' lookup plugin expects a dictionary, got '{term}' of type {type(term)})")
 
             results.extend(self._flatten_hash_to_list(term))
         return results
