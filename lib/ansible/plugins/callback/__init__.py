@@ -189,7 +189,7 @@ class CallbackBase(AnsiblePlugin):
         self._plugin_options = C.config.get_plugin_options(self.plugin_type, self._load_name, keys=task_keys, variables=var_options, direct=direct)
 
     @staticmethod
-    def host_label(result):
+    def host_label(result: TaskResult):
         """Return label for the hostname (& delegated hostname) of a task
         result.
         """
@@ -203,11 +203,11 @@ class CallbackBase(AnsiblePlugin):
                 label += "(%s)" % ahost
         return label
 
-    def _run_is_verbose(self, result, verbosity=0):
+    def _run_is_verbose(self, result: TaskResult, verbosity=0):
         return ((self._display.verbosity > verbosity or result._result.get('_ansible_verbose_always', False) is True)
                 and result._result.get('_ansible_verbose_override', False) is False)
 
-    def _dump_results(self, result, indent=None, sort_keys=True, keep_invocation=False, serialize=True):
+    def _dump_results(self, result: dict, indent=None, sort_keys=True, keep_invocation=False, serialize=True):
         try:
             result_format = self.get_option('result_format')
         except KeyError:
@@ -291,7 +291,7 @@ class CallbackBase(AnsiblePlugin):
                 ' ' * (indent or 4)
             )
 
-    def _handle_warnings(self, res):
+    def _handle_warnings(self, res: dict):
         """ display warnings, if enabled and any exist in the result """
         if C.ACTION_WARNINGS:
             if 'warnings' in res and res['warnings']:
@@ -303,7 +303,7 @@ class CallbackBase(AnsiblePlugin):
                     self._display.deprecated(**warning)
                 del res['deprecations']
 
-    def _handle_exception(self, result, use_stderr=False):
+    def _handle_exception(self, result: dict, use_stderr=False):
 
         if 'exception' in result:
             msg = "An exception occurred during task execution. "
@@ -409,7 +409,7 @@ class CallbackBase(AnsiblePlugin):
                 ret.append(diff['prepared'])
         return u''.join(ret)
 
-    def _get_item_label(self, result):
+    def _get_item_label(self, result: dict):
         """ retrieves the value to be displayed as a label for an item entry from a result object"""
         if result.get('_ansible_no_log', False):
             item = "(censored due to no_log)"
@@ -417,11 +417,11 @@ class CallbackBase(AnsiblePlugin):
             item = result.get('_ansible_item_label', result.get('item'))
         return item
 
-    def _process_items(self, result):
+    def _process_items(self, result: TaskResult):
         # just remove them as now they get handled by individual callbacks
         del result._result['results']
 
-    def _clean_results(self, result, task_name):
+    def _clean_results(self, result: dict, task_name):
         """ removes data from results for display """
 
         # mostly controls that debug only outputs what it was meant to
@@ -601,7 +601,7 @@ class CallbackBase(AnsiblePlugin):
         jid = result._result.get('ansible_job_id')
         self.runner_on_async_ok(host, result._result, jid)
 
-    def v2_runner_on_async_failed(self, result):
+    def v2_runner_on_async_failed(self, result: TaskResult):
         host = result._host.get_name()
         # Attempt to get the async job ID. If the job does not finish before the
         # async timeout value, the ID may be within the unparsed 'async_result' dict.
@@ -636,12 +636,12 @@ class CallbackBase(AnsiblePlugin):
         self.playbook_on_vars_prompt(varname, private, prompt, encrypt, confirm, salt_size, salt, default, unsafe)
 
     # FIXME: not called
-    def v2_playbook_on_import_for_host(self, result, imported_file):
+    def v2_playbook_on_import_for_host(self, result: TaskResult, imported_file):
         host = result._host.get_name()
         self.playbook_on_import_for_host(host, imported_file)
 
     # FIXME: not called
-    def v2_playbook_on_not_import_for_host(self, result, missing_file):
+    def v2_playbook_on_not_import_for_host(self, result: TaskResult, missing_file):
         host = result._host.get_name()
         self.playbook_on_not_import_for_host(host, missing_file)
 
@@ -651,7 +651,7 @@ class CallbackBase(AnsiblePlugin):
     def v2_playbook_on_stats(self, stats):
         self.playbook_on_stats(stats)
 
-    def v2_on_file_diff(self, result):
+    def v2_on_file_diff(self, result: TaskResult):
         if 'diff' in result._result:
             host = result._host.get_name()
             self.on_file_diff(host, result._result['diff'])
@@ -659,16 +659,16 @@ class CallbackBase(AnsiblePlugin):
     def v2_playbook_on_include(self, included_file):
         pass  # no v1 correspondence
 
-    def v2_runner_item_on_ok(self, result):
+    def v2_runner_item_on_ok(self, result: TaskResult):
         pass
 
-    def v2_runner_item_on_failed(self, result):
+    def v2_runner_item_on_failed(self, result: TaskResult):
         pass
 
-    def v2_runner_item_on_skipped(self, result):
+    def v2_runner_item_on_skipped(self, result: TaskResult):
         pass
 
-    def v2_runner_retry(self, result):
+    def v2_runner_retry(self, result: TaskResult):
         pass
 
     def v2_runner_on_start(self, host, task):
