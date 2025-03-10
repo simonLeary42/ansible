@@ -310,6 +310,8 @@ def main():
             r['msg'] = 'Unable to change directory before execution: %s' % to_text(e)
             module.fail_json(**r)
 
+    r['changed'] = True
+
     # check_mode partial support, since it only really works in checking creates/removes
     if module.check_mode:
         shoulda = "Would"
@@ -321,7 +323,8 @@ def main():
         if glob.glob(creates):
             r['msg'] = "%s not run command since '%s' exists" % (shoulda, creates)
             r['stdout'] = "skipped, since %s exists" % creates  # TODO: deprecate
-
+            r['skipped'] = True
+            r['changed'] = False
             r['rc'] = 0
 
     # special skips for idempotence if file does not exist (assumes command removes)
@@ -329,12 +332,12 @@ def main():
         if not glob.glob(removes):
             r['msg'] = "%s not run command since '%s' does not exist" % (shoulda, removes)
             r['stdout'] = "skipped, since %s does not exist" % removes  # TODO: deprecate
+            r['skipped'] = True
+            r['changed'] = False
             r['rc'] = 0
 
     if r['msg']:
         module.exit_json(**r)
-
-    r['changed'] = True
 
     # actually executes command (or not ...)
     if not module.check_mode:
